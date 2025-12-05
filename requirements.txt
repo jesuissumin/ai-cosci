@@ -1,0 +1,9 @@
+requests==2.31.0
+python-dotenv==1.0.0
+pandas==2.1.1
+pyarrow==13.0.0
+biopython==1.81
+pytest==7.4.3
+ipython==8.16.0
+ipykernel==6.26.0
+jupyter==1.0.0

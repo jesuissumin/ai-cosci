@@ -1,0 +1,454 @@
+"""Core agent loop for the bioinformatics AI system."""
+
+import json
+import os
+from typing import Any, Optional
+from src.agent.openrouter_client import OpenRouterClient
+from src.agent.anthropic_client import AnthropicClient
+from src.tools.implementations import (
+    execute_python,
+    search_pubmed,
+    query_database,
+    read_file,
+    get_tool_definitions,
+)
+
+
+class BioinformaticsAgent:
+    """Agent for answering complex bioinformatics questions."""
+
+    def __init__(self, api_key: Optional[str] = None, model: str = "claude-sonnet-4-20250514", provider: str = "anthropic"):
+        """Initialize the agent.
+
+        Args:
+            api_key: API key (Anthropic or OpenRouter)
+            model: Model to use
+            provider: 'anthropic' or 'openrouter'
+        """
+        if provider == "anthropic":
+            self.client = AnthropicClient(api_key=api_key, model=model)
+        else:
+            self.client = OpenRouterClient(api_key=api_key, model=model)
+        self.tools = {
+            "execute_python": execute_python,
+            "search_pubmed": search_pubmed,
+            "query_database": query_database,
+            "read_file": read_file,
+        }
+        self.conversation_history = []
+        self.max_iterations = 30  # Increased from 10 to allow complex multi-step analyses
+
+    def get_system_prompt(self) -> str:
+        """Get the system prompt for scientific reasoning.
+
+        Returns:
+            System prompt string
+        """
+        return """You are CoScientist, an expert AI research assistant for biomedical research. Your role is to help scientists answer complex, multi-step research questions through rigorous analysis, data exploration, and literature review.
+
+## Core Capabilities
+- Analyze complex biological datasets and databases
+- Search peer-reviewed literature to ground answers in evidence
+- Execute Python code for data analysis and visualization
+- Reason through multi-step research problems systematically
+- Propose novel experimental strategies and validate their feasibility
+
+## Response Guidelines
+
+1. **Scientific Rigor**: Always distinguish between established facts, well-supported hypotheses, and speculative ideas. Use phrases like "evidence suggests", "it is plausible that", "needs validation", etc.
+
+2. **Multi-step Problem Solving**: For complex questions:
+   - Break the problem into logical steps
+   - Explain your reasoning for each step
+   - Use tools strategically to gather data
+   - Synthesize findings into coherent conclusions
+
+3. **Data Exploration**: When analyzing data:
+   - Query relevant databases to get context
+   - Examine distributions, patterns, and outliers
+   - Document assumptions clearly
+   - Consider alternative explanations
+
+4. **Literature Integration**:
+   - Search PubMed for relevant studies
+   - Cite specific papers with PMIDs
+   - Note consensus vs. contrasting findings
+   - Acknowledge knowledge gaps where relevant
+
+5. **Practical Feasibility**:
+   - When proposing strategies, consider experimental resources needed
+   - Discuss timeline expectations
+   - Identify potential technical challenges
+   - Suggest validation approaches
+
+## Communication Style
+- Be precise and avoid vague statements
+- Use appropriate scientific terminology
+- Structure complex answers with clear sections
+- Highlight key findings and limitations
+- Propose next steps when appropriate
+
+Remember: Your goal is to help scientists make informed decisions, not to provide definitive answers. Surface uncertainty honestly and help them understand where more research is needed."""
+
+    def add_message(self, role: str, content: str):
+        """Add a message to conversation history.
+
+        Args:
+            role: 'user' or 'assistant'
+            content: Message content
+        """
+        self.conversation_history.append({"role": role, "content": content})
+
+    def call_tool(self, tool_name: str, tool_input: dict[str, Any]) -> dict[str, Any]:
+        """Execute a tool and return the result.
+
+        Args:
+            tool_name: Name of the tool to call
+            tool_input: Input arguments for the tool
+
+        Returns:
+            Tool result as dict
+        """
+        if tool_name not in self.tools:
+            return {
+                "success": False,
+                "output": None,
+                "error": f"Unknown tool: {tool_name}",
+            }
+
+        try:
+            tool_func = self.tools[tool_name]
+            result = tool_func(**tool_input)
+            return result.to_dict()
+        except TypeError as e:
+            return {
+                "success": False,
+                "output": None,
+                "error": f"Invalid arguments for {tool_name}: {str(e)}",
+            }
+        except Exception as e:
+            return {
+                "success": False,
+                "output": None,
+                "error": f"Tool execution error: {str(e)}",
+            }
+
+    def process_response(self, response: dict[str, Any]) -> tuple[Optional[str], list[dict[str, Any]]]:
+        """Process API response and extract text and tool calls.
+
+        Args:
+            response: Response from OpenRouter API
+
+        Returns:
+            Tuple of (response_text, tool_calls)
+        """
+        text = self.client.get_response_text(response)
+        tool_calls = self.client.extract_tool_calls(response)
+        return text, tool_calls
+
+    def run(self, user_question: str, verbose: bool = False) -> str:
+        """Run the agent loop for a user question.
+
+        Args:
+            user_question: The question to answer
+            verbose: Print intermediate steps
+
+        Returns:
+            Final response from the agent
+        """
+        self.conversation_history = []
+        self.add_message("user", user_question)
+
+        if verbose:
+            print(f"\n{'='*60}")
+            print(f"Question: {user_question}")
+            print(f"{'='*60}\n")
+
+        for iteration in range(self.max_iterations):
+            if verbose:
+                print(f"[Iteration {iteration + 1}/{self.max_iterations}]")
+
+            # Get response from LLM
+            # Anthropic API requires system prompt separately
+            call_params = {
+                "messages": self.conversation_history,
+                "tools": get_tool_definitions(),
+                "temperature": 0.7,
+                "max_tokens": 1500,  # Reduced to avoid per-request limits
+            }
+
+            # Add system prompt for Anthropic
+            if isinstance(self.client, AnthropicClient):
+                call_params["system"] = self.get_system_prompt()
+
+            response = self.client.create_message(**call_params)
+
+            text, tool_calls = self.process_response(response)
+
+            if text:
+                if verbose:
+                    print(f"Assistant: {text[:200]}..." if len(text) > 200 else f"Assistant: {text}")
+
+            # If no tool calls, we're done
+            if not tool_calls:
+                if verbose:
+                    print("\n[Agent completed - no more tools needed]")
+                # Add the final assistant message
+                if text:
+                    self.add_message("assistant", text)
+                return text
+
+            if verbose:
+                print(f"[Tools to call: {[tc['name'] for tc in tool_calls]}]")
+
+            # Add assistant message with tool calls (required for proper conversation flow)
+            # Store the raw response message which includes tool_calls
+            if response.get("choices") and response["choices"][0].get("message"):
+                assistant_message = response["choices"][0]["message"]
+                self.conversation_history.append(assistant_message)
+
+            # Process tool calls
+            tool_results = []
+            for tool_call in tool_calls:
+                tool_name = tool_call["name"]
+                tool_input = tool_call["input"]
+                tool_call_id = tool_call.get("id", "")
+
+                if verbose:
+                    print(f"  Calling {tool_name}({json.dumps(tool_input)})...")
+
+                # Execute tool
+                result = self.call_tool(tool_name, tool_input)
+
+                if verbose:
+                    if result["success"]:
+                        result_preview = str(result["output"])[:200]
+                        print(f"    → Success: {result_preview}...")
+                    else:
+                        print(f"    → Error: {result['error']}")
+
+                # Format tool result according to OpenAI spec
+                # Truncate large results to avoid context overflow
+                result_str = json.dumps(result)
+                if len(result_str) > 5000:
+                    result_truncated = {
+                        "success": result.get("success"),
+                        "output": str(result.get("output"))[:4500] + "...[truncated]",
+                        "error": result.get("error")
+                    }
+                    result_str = json.dumps(result_truncated)
+
+                tool_result = {
+                    "role": "tool",
+                    "tool_call_id": tool_call_id,
+                    "name": tool_name,
+                    "content": result_str
+                }
+                tool_results.append(tool_result)
+
+            # Add all tool results to conversation
+            self.conversation_history.extend(tool_results)
+
+        if verbose:
+            print("\n[Max iterations reached]")
+
+        # Return last assistant message or empty string
+        for msg in reversed(self.conversation_history):
+            if msg["role"] == "assistant":
+                return msg["content"]
+
+        return ""
+
+    def get_critic_prompt(self) -> str:
+        """Get the system prompt for the scientific critic.
+
+        Returns:
+            Critic system prompt string
+        """
+        return """You are a Scientific Critic specializing in biomedical research evaluation. Your role is to rigorously review scientific answers for accuracy, completeness, and methodological soundness.
+
+## Evaluation Criteria
+
+1. **Scientific Rigor**:
+   - Are claims supported by evidence?
+   - Are appropriate statistical methods used?
+   - Are limitations acknowledged?
+   - Is the reasoning logically sound?
+
+2. **Completeness**:
+   - Does the answer address all parts of the question?
+   - Are key details missing?
+   - Should additional analyses be performed?
+
+3. **Data Analysis Quality**:
+   - Are the data analyses appropriate?
+   - Are results interpreted correctly?
+   - Are there computational errors?
+
+4. **Literature Support**:
+   - Are claims consistent with the literature?
+   - Should additional papers be cited?
+   - Are there contradictory findings that should be discussed?
+
+5. **Practical Feasibility**:
+   - Are proposed strategies realistic?
+   - Are technical challenges acknowledged?
+   - Are resource requirements reasonable?
+
+## Your Task
+
+Review the provided answer and provide constructive feedback. Focus on:
+- **Strengths**: What is done well
+- **Issues**: Errors, gaps, or weaknesses
+- **Improvements**: Specific suggestions to enhance the answer
+
+Be direct but constructive. Prioritize accuracy and completeness over minor stylistic issues.
+Do NOT provide a rewritten answer - only critique and suggestions.
+
+If the answer is of high quality and scientifically sound, you may approve it with minor suggestions."""
+
+    def run_with_critic(self, user_question: str, verbose: bool = False, max_refinement_rounds: int = 1) -> tuple[str, str, str]:
+        """Run the agent with critic feedback loop.
+
+        Args:
+            user_question: The question to answer
+            verbose: Print intermediate steps
+            max_refinement_rounds: Maximum number of refinement iterations (default: 1)
+
+        Returns:
+            Tuple of (initial_answer, critique, final_answer)
+        """
+        if verbose:
+            print(f"\n{'='*60}")
+            print(f"RUNNING WITH CRITIC FEEDBACK")
+            print(f"{'='*60}\n")
+
+        # Step 1: Get initial answer from main agent
+        if verbose:
+            print("[STEP 1: Main Agent Analysis]")
+        initial_answer = self.run(user_question, verbose=verbose)
+
+        if not initial_answer:
+            return "", "No answer produced by agent", ""
+
+        # Step 2: Get critic feedback
+        if verbose:
+            print(f"\n{'='*60}")
+            print("[STEP 2: Scientific Critic Review]")
+            print(f"{'='*60}\n")
+
+        # Create a new agent instance for the critic with the same config
+        critic_agent = BioinformaticsAgent(
+            api_key=None,  # Reuse existing credentials
+            model=self.client.model if hasattr(self.client, 'model') else "claude-sonnet-4-20250514",
+            provider="anthropic" if isinstance(self.client, AnthropicClient) else "openrouter"
+        )
+
+        # Build critic prompt
+        critic_question = f"""Please review the following scientific answer for rigor, completeness, and accuracy.
+
+ORIGINAL QUESTION:
+{user_question}
+
+ANSWER TO REVIEW:
+{initial_answer}
+
+Provide a structured critique with:
+1. Strengths (what is done well)
+2. Issues (errors, gaps, or weaknesses - be specific)
+3. Improvements (specific suggestions to enhance the answer)
+
+If the answer is high quality and scientifically sound, you may approve it."""
+
+        # Override the critic's system prompt
+        original_get_system_prompt = critic_agent.get_system_prompt
+        critic_agent.get_system_prompt = self.get_critic_prompt
+
+        # Run critic (without tools, just reasoning)
+        critique = ""
+        critic_messages = [{"role": "user", "content": critic_question}]
+
+        call_params = {
+            "messages": critic_messages,
+            "tools": [],  # Critic doesn't use tools
+            "temperature": 0.3,  # Lower temperature for consistent evaluation
+            "max_tokens": 1500,
+        }
+
+        if isinstance(self.client, AnthropicClient):
+            call_params["system"] = self.get_critic_prompt()
+
+        response = self.client.create_message(**call_params)
+        critique = self.client.get_response_text(response)
+
+        if verbose:
+            print(f"Critic Feedback:\n{critique}\n")
+
+        # Restore original system prompt
+        critic_agent.get_system_prompt = original_get_system_prompt
+
+        # Step 3: Check if refinement needed
+        # Simple heuristic: if critique mentions serious issues, refine
+        needs_refinement = any(keyword in critique.lower() for keyword in [
+            "error", "incorrect", "missing", "should", "needs", "improve",
+            "gap", "weakness", "concern", "problem"
+        ])
+
+        if not needs_refinement or max_refinement_rounds == 0:
+            if verbose:
+                print("[STEP 3: No refinement needed - answer approved]\n")
+            return initial_answer, critique, initial_answer
+
+        # Step 4: Refine answer based on critique
+        if verbose:
+            print(f"\n{'='*60}")
+            print("[STEP 3: Refining Answer Based on Feedback]")
+            print(f"{'='*60}\n")
+
+        refinement_question = f"""Based on the scientific critique below, please revise and improve your previous answer.
+
+ORIGINAL QUESTION:
+{user_question}
+
+YOUR PREVIOUS ANSWER:
+{initial_answer}
+
+CRITIC FEEDBACK:
+{critique}
+
+Please provide an improved answer that addresses the critique's suggestions. Focus on fixing errors, filling gaps, and adding missing analyses."""
+
+        # Clear conversation history and run refinement
+        final_answer = self.run(refinement_question, verbose=verbose)
+
+        if verbose:
+            print(f"\n{'='*60}")
+            print("[COMPLETE: Answer refined based on critic feedback]")
+            print(f"{'='*60}\n")
+
+        return initial_answer, critique, final_answer
+
+
+def create_agent(api_key: Optional[str] = None, model: Optional[str] = None, provider: Optional[str] = None) -> BioinformaticsAgent:
+    """Factory function to create an agent.
+
+    Args:
+        api_key: API key (Anthropic or OpenRouter)
+        model: Model identifier (defaults based on provider)
+        provider: 'anthropic' or 'openrouter' (defaults to API_PROVIDER env var)
+
+    Returns:
+        BioinformaticsAgent instance
+    """
+    # Get provider from env if not specified
+    if provider is None:
+        provider = os.getenv("API_PROVIDER", "anthropic")
+
+    # Set default models based on provider
+    if model is None:
+        if provider == "anthropic":
+            model = "claude-sonnet-4-20250514"
+        else:
+            model = "anthropic/claude-sonnet-4"
+
+    return BioinformaticsAgent(api_key=api_key, model=model, provider=provider)

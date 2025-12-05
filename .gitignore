@@ -1,0 +1,5 @@
+.env
+.env.*
+*.env
+NEXT_SESSION.md
+# (plus anything else you want ignored)

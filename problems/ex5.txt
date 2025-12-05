@@ -1,0 +1,28 @@
+
+[Example Problem 5] Predicting Drug Repositioning Candidates to Inhibit T-Cell Exhaustion
+
+T-cell exhaustion is a phenomenon in which T cells, repeatedly stimulated under chronic infection or within the tumor microenvironment, lose their functional capacity. It is a major cause of reduced responsiveness to immunotherapy and treatment failure. Discovering drugs or drug combinations that can reverse exhaustion is considered a key challenge in advancing immunotherapy.
+
+The goal of this problem is to integrate publicly available drug–gene/transcriptome databases to predict drug candidates capable of reversing a T-cell exhaustion gene signature, and to provide supporting rationale.
+
+Input Data Q5
+exhaustion_signature → a list of upregulated and downregulated genes associated with T-cell exhaustion
+Refer to the following Drug-related Open Data:
+	•	Drug–target protein/gene association information
+	•	Information on drugs that are already used clinically, preclinically, or currently under investigation
+
+Propose an analytical strategy that satisfies the following requirements.
+
+Key Points
+	•	Understanding the drug–target network
+	•	Applying a signature-reversal approach based on the exhaustion signature
+	•	Prioritizing drug candidates and generating hypotheses about mechanisms of action
+
+(A) Analysis of the T-cell Exhaustion Signature
+
+(B) Candidate Discovery Using Drug–Gene Network Analysis
+
+(C) Drug Candidate Selection and Mechanistic Hypothesis Generation
+
+⸻
+

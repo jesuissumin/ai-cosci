@@ -1,0 +1,39 @@
+Problem 2 (in Markdown format)
+# Sample Problem 2: Elucidating the Mechanism of mRNA Stabilization by an RNA Virus–Derived cis-Regulatory Element and Analysis of Poly(A) Tail Modifications
+
+## Background
+
+It has been reported that a certain RNA virus modulates the poly(A) tail of its RNAs in host cells to evade degradation by the host machinery. The researcher aims to identify the cis-regulatory element (CRE) within this virus that is essential for this stabilizing function, and, based on this, to clarify (i) how the CRE increases mRNA stability, (ii) how the poly(A) tail is modified for its stabilization, and (iii) which host enzymes are involved in this stabilization mechanism.
+
+To this end, the researcher generated mRNAs by in vitro transcription in which the virus-derived CRE sequence was inserted into the 3′ UTR, and delivered them into cells using lipid nanoparticles (LNPs). Normal protein expression from these mRNAs was confirmed, and at 24 hours post-transfection, more than a 10-fold increase in expression was observed compared to a control mRNA lacking the CRE.
+
+To determine the mechanism more precisely, the researcher analyzed cellular RNA at 24 hours post-transfection using nanopore direct RNA sequencing (dRNA-seq). For comparison, among cells transfected with mRNAs containing the same CRE, those in which increased RNA stability was not observed were designated as the `inactive` group, and those showing strong stabilization were designated as the `active` group; dRNA-seq was performed on both groups.
+
+After preprocessing, the following eight files are provided:
+
+* `active-control.pod5`: Raw current-signal data for control RNAs (lacking CRE) from `active` cells
+* `active-control.bam`: Alignments of the basecalled reads from the above data to the reference sequence
+* `active-cre.pod5`: Raw current-signal data for CRE-containing RNAs from `active` cells
+* `active-cre.bam`: Alignments of the basecalled reads from the above data to the reference sequence
+
+For the `inactive` group, an analogous set of four files (`inactive-control.pod5`, `inactive-control.bam`, `inactive-cre.pod5`, `inactive-cre.bam`) is provided.
+
+Answer the following questions.
+
+1. Propose at least three plausible molecular mechanisms by which this virus-derived CRE could increase RNA stability, and for each hypothesis, suggest experimental approaches or data-analysis strategies that could be used to test it.
+
+2. Using the provided dRNA-seq data, quantitatively compare the distributions of poly(A) tail lengths, interpret the observed differences in the context of this study, and summarize them in the form of a report suitable for inclusion in a research article.
+
+3. Using the provided raw current-signal data, analyze the poly(A) regions to assess whether non-A nucleotides or modifications are present within the poly(A) tails. Visualize your findings and organize them with accompanying explanations.
+
+4. Compare how the frequency and distribution of non-A nucleotides and modifications identified in (3.) differ between CRE-negative and CRE-positive RNAs (`active-control` vs. `active-cre`), and between the `active` and `inactive` cell groups. Visualize these comparisons and summarize them in a report, with particular emphasis on the biological significance of the results and proposed next steps for further investigation.
+
+5. In the `active-cre` data, explore whether there are any distinctive patterns or hotspots in the distribution of potential modifications within the poly(A) tails, and propose mechanistic hypotheses that could explain any such features you identify.
+
+6. Based on the above analyses, propose a prioritized list of five host enzymes that are most likely to mediate the poly(A)-dependent stabilization mechanism in human cells. For each candidate, describe the criteria used to rank it and provide supporting evidence from the literature.
+
+7. Design an experimental strategy to test whether the enzymes proposed in (6.) directly recognize and act on the CRE and its associated RNA substrate in cells.
+
+8. Assuming that (7.) confirms one particular enzyme as playing a central role, broadly outline subsequent research directions corresponding to the conventional molecular biology research. Include, for example, investigations of cofactor requirements, substrate specificity, subcellular localization, regulatory factors, physiological functions, and potential industrial or biotechnological applications.
+
+9. Integrating the research background, prior studies, data-analysis results, mechanistic insights, and future prospects described above, draft a research article of approximately 3,000 words, including no more than 10 figures.
