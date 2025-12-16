@@ -1,4 +1,4 @@
-# CoScientist
+# AI Co-Scientist 
 
 AI-powered research assistant for biomedical questions using multi-agent collaboration and tool-augmented reasoning.
 
