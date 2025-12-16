@@ -99,17 +99,21 @@ class BioinformaticsAgent:
    - Synthesize findings into coherent conclusions
 
 3. **Data Exploration**: When analyzing data:
+   - ALWAYS use find_files() FIRST to discover available data files
+   - When reading files: the input directory is pre-configured, so use ONLY the filename (e.g., 'file.csv', NOT 'data/Q5/file.csv')
    - Query relevant databases to get context
    - Examine distributions, patterns, and outliers
    - Document assumptions clearly
    - Consider alternative explanations
 
-4. **Literature Integration**:
-   - Use `search_literature` for deep, evidence-based answers from full-text papers (recommended for complex mechanistic questions)
-   - Use `search_pubmed` for quick abstract-level searches
+4. **Literature Integration** (CRITICAL):
+   - **VERIFY BEFORE CITING**: If you reference a paper (e.g., "Philip et al., Nature 2017"), you MUST use `search_literature` to fetch and read it BEFORE making claims about its content
+   - **Don't guess**: Never say "likely X paper says Y" - actually fetch and read the paper to confirm
+   - Use `search_literature(mode='online')` to fetch papers from PubMed/arXiv if not in local library
+   - Use `search_pubmed` ONLY for quick abstract-level searches when full-text isn't needed
    - ALWAYS cite papers in this format: "Title" (PMID: 12345678)
    - Include the full paper title and PMID for every claim backed by literature
-   - Example: "According to 'CRISPR-Cas9 genome editing in human cells' (PMID: 23287718), ..."
+   - Example: "According to 'Chromatin states define tumour-specific T cell dysfunction and reprogramming' (PMID: 28193889), ..."
    - Note consensus vs. contrasting findings
    - Acknowledge knowledge gaps where relevant
 

@@ -36,8 +36,8 @@ class DataConfig:
     pubmed_api_key: Optional[str] = None
 
     # PaperQA settings
-    paperqa_llm: str = "openrouter/google/gemini-2.0-flash-exp:free"  # Model for PaperQA (via OpenRouter)
-    paperqa_embedding: str = "openrouter/openai/text-embedding-3-small"  # Embedding via OpenRouter
+    paperqa_llm: str = "openrouter/google/gemini-3-pro-preview"  # Model for PaperQA (via OpenRouter) - PAID model
+    paperqa_embedding: str = "st-multi-qa-MiniLM-L6-cos-v1"  # Local embedding (free, no API calls)
     paperqa_max_sources: int = 5  # Maximum contexts to retrieve
 
     def __post_init__(self):
@@ -83,8 +83,8 @@ def get_default_config() -> DataConfig:
         paper_library_dir=os.getenv("PAPER_LIBRARY_DIR", "./papers"),
         pubmed_email=os.getenv("PUBMED_EMAIL"),
         pubmed_api_key=os.getenv("PUBMED_API_KEY"),
-        paperqa_llm=os.getenv("PAPERQA_LLM", "openrouter/google/gemini-2.0-flash-exp:free"),
-        paperqa_embedding=os.getenv("PAPERQA_EMBEDDING", "openrouter/openai/text-embedding-3-small"),
+        paperqa_llm=os.getenv("PAPERQA_LLM", "openrouter/google/gemini-3-pro-preview"),
+        paperqa_embedding=os.getenv("PAPERQA_EMBEDDING", "st-multi-qa-MiniLM-L6-cos-v1"),
         paperqa_max_sources=int(os.getenv("PAPERQA_MAX_SOURCES", "5"))
     )
 

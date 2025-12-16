@@ -750,17 +750,20 @@ def search_literature(
         # The LLM will ONLY be used during the query phase (docs.query())
         from paperqa.settings import ParsingSettings
 
+        # Determine if we should use LLM during parsing based on model tier
+        # For paid models, enable LLM for better document details extraction
+        # For free models, disable to avoid rate limits
+        use_llm_during_parsing = ":free" not in config.paperqa_llm.lower()
+
         settings_kwargs = {
             "llm": config.paperqa_llm,
             "summary_llm": config.paperqa_llm,  # Use same LLM for summaries
             "embedding": embedding_config,
-            # DISABLE ALL LLM USAGE DURING PDF PARSING
-            # This ensures NO API calls when loading PDFs
             "parsing": ParsingSettings(
-                use_doc_details=False,  # Don't use LLM to extract document details
+                use_doc_details=use_llm_during_parsing,  # Enable LLM for document metadata extraction (paid models only)
                 chunk_size=3000,  # Standard chunk size
                 overlap=100,  # Standard overlap
-                multimodal=False,  # CRITICAL: Disable image/figure processing (requires LLM)
+                multimodal=False,  # Disable image/figure processing for now
                 enrichment_llm=config.paperqa_llm,  # Use same LLM for enrichment (vision tasks)
             )
         }
@@ -778,7 +781,8 @@ def search_literature(
             )
 
         settings = Settings(**settings_kwargs)
-        print(f"[DEBUG] Parsing config: use_doc_details={settings.parsing.use_doc_details} (LLM disabled during PDF loading)", file=sys.stderr)
+        llm_status = "LLM enabled for metadata extraction" if settings.parsing.use_doc_details else "LLM disabled during PDF loading"
+        print(f"[DEBUG] Parsing config: use_doc_details={settings.parsing.use_doc_details} ({llm_status})", file=sys.stderr)
 
         # Create document collection
         docs = Docs()
@@ -797,12 +801,12 @@ def search_literature(
                 for attempt in range(max_retries):
                     try:
                         print(f"[DEBUG] Loading PDF: {pdf_file.name}...", file=sys.stderr)
-                        # Provide a basic citation to SKIP LLM call during PDF loading
-                        # The citation can be simple - the LLM will only be used during query
+                        # Provide a basic citation - LLM may be used for metadata extraction if use_doc_details=True
                         simple_citation = f"{pdf_file.stem}, Local PDF"
                         docs.add(str(pdf_file), citation=simple_citation, settings=settings)
                         pdf_count += 1
-                        print(f"[DEBUG] Successfully loaded {pdf_file.name} (no LLM call)", file=sys.stderr)
+                        llm_used_msg = "with LLM metadata extraction" if settings.parsing.use_doc_details else "no LLM call"
+                        print(f"[DEBUG] Successfully loaded {pdf_file.name} ({llm_used_msg})", file=sys.stderr)
                         break  # Success, move to next PDF
                     except Exception as e:
                         error_str = str(e).lower()
@@ -1155,13 +1159,13 @@ def get_tool_definitions() -> list[dict[str, Any]]:
             "type": "function",
             "function": {
                 "name": "read_file",
-                "description": "Read a file from the input data directory (question-specific data like gene signatures, expression data). Supports parquet, CSV, TSV, and text files.",
+                "description": "Read a file from the input data directory (question-specific data like gene signatures, expression data). Supports parquet, CSV, TSV, and text files. IMPORTANT: The input directory is already configured - just provide the filename or relative path from that directory. For example, if a file is at './data/Q5/file.csv' and input_dir='./data/Q5', then use file_path='file.csv' (NOT 'data/Q5/file.csv'). Use find_files() first to discover available files and their correct paths.",
                 "parameters": {
                     "type": "object",
                     "properties": {
                         "file_path": {
                             "type": "string",
-                            "description": "Path to file relative to input directory (e.g., 'Q5/exhaustion_signature.csv')",
+                            "description": "Filename or path relative to the configured input directory. If find_files() returns 'data/Q5/file.csv' but input_dir is './data/Q5', use just 'file.csv'. Use the basename from find_files results.",
                         }
                     },
                     "required": ["file_path"],
@@ -1206,7 +1210,7 @@ def get_tool_definitions() -> list[dict[str, Any]]:
             "type": "function",
             "function": {
                 "name": "search_literature",
-                "description": "Advanced AI-powered literature search using PaperQA. PRIORITIZES local PDF library first, then supplements with online databases (PubMed, arXiv) if needed. Reads full-text papers and generates evidence-based answers with citations. More rigorous than search_pubmed - use this when you need detailed, cited information from research papers. Default 'auto' mode checks local PDFs first and only searches online if local papers don't provide a good answer.",
+                "description": "Advanced AI-powered literature search using PaperQA. **USE THIS TO VERIFY PAPERS BEFORE CITING THEM**. PRIORITIZES local PDF library first, then supplements with online databases (PubMed, arXiv) if needed. Reads full-text papers and generates evidence-based answers with citations. More rigorous than search_pubmed - use this when you need detailed, cited information from research papers. If you mention a paper (e.g., 'Philip et al. Nature 2017'), you MUST use this tool with mode='online' to fetch and verify it. Default 'auto' mode checks local PDFs first and only searches online if local papers don't provide a good answer.",
                 "parameters": {
                     "type": "object",
                     "properties": {

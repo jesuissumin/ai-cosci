@@ -140,15 +140,16 @@ Be concise (3-5 sentences or a specific analysis). Focus on YOUR expertise."""
                 for agent in self.specialists
             ]
             return await asyncio.gather(*tasks)
-        
+
         # Run the async function
-        if asyncio.get_event_loop().is_running():
+        try:
+            # Try to get the running loop (only works if already in async context)
+            loop = asyncio.get_running_loop()
             # If we're already in an async context, create new task
-            loop = asyncio.get_event_loop()
             future = asyncio.run_coroutine_threadsafe(run_all(), loop)
             return future.result()
-        else:
-            # Otherwise, use asyncio.run()
+        except RuntimeError:
+            # No running loop - we're in a sync context, so use asyncio.run()
             return asyncio.run(run_all())
 
     def run_meeting(self, num_rounds: int = 2) -> str:
