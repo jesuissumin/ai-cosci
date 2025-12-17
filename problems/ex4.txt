@@ -1,0 +1,24 @@
+[P4] Discovery of Therapeutic Targets for Pulmonary Fibrosis: Inhibitor Candidate Design Based on the IL-11 Interaction Network
+Pulmonary fibrosis (especially Idiopathic Pulmonary Fibrosis, or IPF) is a progressive disease characterized by the irreversible hardening and functional decline of lung tissue. A major limitation is that currently approved therapies (e.g., anti-fibrotic agents) cannot entirely halt the disease's progression. Recent research indicates that IL-11 (Interleukin-11) is a critical cytokine in the pathogenesis of pulmonary fibrosis, playing an important role in fibroblast activation, extracellular matrix (ECM) accumulation, and inflammation–fibrosis signaling links. It is also gaining attention as a factor associated with tissue aging and systemic aging-related pathophysiology. Newly identified interactors of IL-11 are emerging as core nodes in the fibrosis-aging network.
+
+The objective of this problem is to integrate and analyze the latest literature and data on IL-11 signaling and its associated interactors in pulmonary fibrosis, with the goal of predicting the inhibitory target candidates that can most effectively block the fibrotic pathway and presenting the scientific rationale. 
+
+If necessary, the analysis should also consider how the aging-related pathways involving IL-11 are connected to fibrosis. 
+
+The following roles are required for this:
+1. Literature Analysis (latest papers on IL-11, OMICs data, reviews, etc.)
+2. Protein-Protein Interaction (PPI) Network and Pathway Network Modeling
+3. Hypothesis-driven Reasoning (defining the most influential nodes/interactions for fibrosis and aging inhibition)
+
+Present an analysis and design strategy that satisfies both requirements (A) and (B) below.
+
+(A) Analysis of IL-11 and IL-11 Interacting Factors Driving Pulmonary Fibrosis
+1. Summarize the roles of IL-11 related to pulmonary fibrosis and aging.
+2. Integrate a list of newly reported IL-11 interactors.
+3. Model the Protein-Protein Interaction network and fibrosis/aging pathways.
+4. Propose final target candidates and rationale.
+
+(B) Proposal for a Binder that can effectively inhibit IL-11 and its Interacting Factors (from a Biologics Design perspective)
+1. Define the Target Class and Modality.
+2. Binder design strategy (conceptual level).
+3. Propose hypotheses regarding the efficacy on fibrosis and aging inhibition, and safety.

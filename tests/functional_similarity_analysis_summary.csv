@@ -1,0 +1,6 @@
+Analysis_Component,Method,N_Features,Mean_Similarity,Key_Finding
+Gene_Selection,Mean expression across 3 resting conditions,300,N/A,Ribosomal proteins dominant (30.3%)
+Functional_Annotation,Literature-based systematic categorization,8,0.454,Functional modules identified
+Expression_Similarity,"Pearson correlation normalized to [0,1]",3,0.56,No technical artifacts detected
+Phylogenetic_Similarity,Gene family evolutionary relationships,11,0.363,Strong family clustering
+Integrated_Scoring,Weighted integration (40/30/30),300x300,0.469,Biologically meaningful pairs identified

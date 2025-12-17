@@ -55,7 +55,7 @@ PAPERQA_LLM=openrouter/google/gemini-3-pro-preview
 
 # === Data Directories ===
 DATABASE_DIR=/path/to/databases  # DrugBank, BindingDB, etc.
-INPUT_DIR=./data/Q5  # Question-specific files
+INPUT_DIR=./data/Q2  # Question-specific files
 PAPER_LIBRARY_DIR=./papers  # Local PDF library
 
 # === PaperQA Settings ===

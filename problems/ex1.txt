@@ -1,0 +1,22 @@
+[P1] Quantifying Functional Similarity Between T Cell Genes
+
+In T cells, genes performing diverse functions such as antigen recognition, activation, and differentiation operate as a network. Generally, functionally similar gene pairs exhibit the following characteristics:
+- Similar expression patterns (expr_corr)
+- Similar protein structures (struct_sim)
+- Close evolutionary lineage (phylo_sim)
+
+The objective of this problem is to construct a Function Similarity Score between genes by integrating expression data (features) and gene names (genelist.csv, ENSMUSG+gene name), and to define gene clusters based on this score.
+
+Input Data:
+- Includes TPM expression files 
+- Includes genelist
+- Includes CD4 T and CD8 T cells
+- Resting T cells: Naive, Memory T cells
+- Activated T cells: TH0, TH1, TH2, TH17, TREG, 0.5/1/2/4h, etc.
+
+Based on the input data above, propose an analysis strategy that meets the following requirements:
+(1) Generate LLM-based gene function summaries.
+(2) Generate an LLM-based phylogenetic tree (knowledge-based).
+(3) Generate Expression-based similarity scores.
+(4) Based on the Similarity Score integrated from (1, 2, 3), propose major gene pairs involved in the regulation of resting T cells (naive or memory T cells), and provide the rationale and biological function (can be omitted if unavailable).
+(5) Target the top 300 highly expressed genes in resting T cells to generate protein structure similarity scores using public protein and domain information, and predict gene pairs important for resting state regulation.

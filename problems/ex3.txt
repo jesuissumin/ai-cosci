@@ -1,0 +1,19 @@
+[P3] Designing a Therapeutic Mini-binder Candidate for Triple-Negative Breast Cancer (TNBC): Targeting the TNFɑ-ΔNP63ɑ Axis
+
+Triple-Negative Breast Cancer (TNBC) is a subtype of breast cancer where Estrogen Receptor (ER), Progesterone Receptor (PR), and HER2 expression are all negative. Due to limited conventional targeted therapeutic options and high recurrence rates, there is a critical need for new treatment strategies. ΔNp63ɑ is known as an important biomarker and potential therapeutic target in TNBC, and it has been reported that TNFɑ signaling can induce ΔNp63ɑ degradation.
+
+The objective of this problem is to discover a protein binder that selectively binds to the TNF receptor (TNFR) through AI-based design. The process aims to maximize the binder's binding specificity while minimizing side effects, off-target reactions, and immunogenicity. 
+
+Considering that TNFR1 and TNFR2 induce different biological effects, the design must also incorporate pathway-specific bias to selectively activate or inhibit one pathway over the other.
+
+In this problem, we will design a mini-binder candidate among various protein binder options. 
+
+Design a binder discovery pipeline that includes all the functionalities listed below. 
+
+Specifically describe the type of tool to be used in each step, the reason for selection, alternative approaches, and how the output of each tool connects as input to the next step.
+1. Selection of the Binder Binding Site on TNFR1/2.
+2. Incorporation of the Binder's Biophysical Constraints (e.g., length, charge, stability, manufacturability).
+3. Candidate Binder Sequence Design.
+4. Prediction or Analysis of the Binding Structure and Characteristics between the candidate binder and TNFR1/2 (KD, kon, koff, etc.).
+5. Off-target Receptor Search and Binding Potential Assessment.
+6. Prioritization and Indexing of Candidate Sequences (Propose ranking criteria and justification for selection).
